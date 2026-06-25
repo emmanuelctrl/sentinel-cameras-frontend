@@ -1,144 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Sentinel — Login</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel — Live Camera Monitoring</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
-  :root {
-    --bg:#080a0d; --panel:#0e1117; --border:#1a1f28; --border2:#242b36;
-    --accent:#00e5ff; --danger:#ff3b3b; --ok:#00d084;
-    --text:#e2e8f0; --muted:#4a5568;
-    --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  :root{
+    --bg:#080a0d;--panel:#0e1117;--panel2:#11141b;--border:#1a1f28;--border2:#242b36;
+    --accent:#00e5ff;--danger:#ff3b3b;--warn:#ffb020;--ok:#00d084;
+    --text:#e2e8f0;--muted:#5b6577;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--sans);
-    min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background-image:radial-gradient(ellipse at 20% 50%, rgba(0,229,255,.04) 0%, transparent 60%),
-                     radial-gradient(ellipse at 80% 20%, rgba(0,208,132,.03) 0%, transparent 50%);
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--sans);
+    min-height:100vh;display:flex;flex-direction:column;
   }
+  /* subtle scanning grid backdrop, signature element */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size:42px 42px;opacity:.25;
+  }
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;border-bottom:1px solid var(--border);
+    background:var(--panel);position:sticky;top:0;z-index:100;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{width:22px;height:22px}
+  .brand b{font-weight:600;letter-spacing:.02em}
+  .brand span{color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+
+  main{flex:1;position:relative;z-index:1;display:flex;justify-content:center;padding:48px 20px 80px}
+  .wrap{width:100%;max-width:560px}
+
+  /* ── Setup form ───────────────────────────────────────────────── */
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--accent);
+    text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  h1{font-size:28px;font-weight:500;letter-spacing:-.01em;margin-bottom:10px}
+  .lede{color:var(--muted);font-size:14.5px;line-height:1.55;margin-bottom:34px}
+
   .card{
-    width:380px;padding:40px 36px;
-    background:var(--panel);border:1px solid var(--border2);
-    border-radius:18px;box-shadow:0 32px 80px rgba(0,0,0,.5);
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:28px;
   }
-  .logo{
-    display:flex;align-items:center;gap:10px;margin-bottom:32px;
-    font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent);
-    letter-spacing:.06em;
+  .field{margin-bottom:20px}
+  .field label{
+    display:block;font-size:12.5px;color:var(--muted);margin-bottom:7px;
+    font-family:var(--mono);letter-spacing:.02em;
   }
-  .logo svg{width:28px;height:28px}
-  .tagline{font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.04em;}
-  h2{font-size:20px;font-weight:600;margin-bottom:6px}
-  .sub{font-size:13px;color:var(--muted);margin-bottom:28px}
-  .field{margin-bottom:18px}
-  label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;
-    font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
-  input{
-    width:100%;padding:11px 14px;
-    background:var(--bg);border:1px solid var(--border2);
-    border-radius:8px;color:var(--text);font-size:14px;
-    font-family:var(--sans);outline:none;transition:border .15s;
+  .field input{
+    width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:8px;
+    padding:11px 13px;color:var(--text);font-family:var(--mono);font-size:13.5px;
+    transition:border-color .15s;
   }
-  input:focus{border-color:var(--accent)}
+  .field input::placeholder{color:#3a4150}
+  .field input:focus{outline:none;border-color:var(--accent)}
+  .field .hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .field .hint a{color:var(--accent);text-decoration:none}
+
   .btn{
-    width:100%;padding:12px;border-radius:9px;border:none;
-    background:var(--accent);color:#000;font-size:14px;font-weight:600;
-    cursor:pointer;transition:filter .15s;margin-top:6px;font-family:var(--sans);
+    width:100%;background:var(--accent);color:#04141a;border:none;border-radius:8px;
+    padding:13px;font-weight:600;font-size:14px;cursor:pointer;letter-spacing:.01em;
+    transition:filter .15s,transform .1s;
   }
-  .btn:hover{filter:brightness(1.1)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .error{
-    background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.3);
-    border-radius:7px;padding:10px 14px;font-size:13px;color:var(--danger);
-    margin-bottom:16px;display:none;
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed}
+
+  .error-box{
+    background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.3);border-radius:8px;
+    padding:12px 14px;margin-bottom:20px;font-size:13px;color:#ff8080;line-height:1.5;display:none;
   }
-  .footer{margin-top:28px;text-align:center;font-size:12px;color:var(--muted)}
-  .dots{display:flex;gap:6px;margin-bottom:28px}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--border2)}
-  .dot:nth-child(1){background:var(--ok)}
-  .dot:nth-child(2){background:var(--accent)}
-  .dot:nth-child(3){background:var(--muted)}
+  .error-box.show{display:block}
+
+  .note{
+    margin-top:22px;padding-top:18px;border-top:1px solid var(--border);
+    font-size:12px;color:var(--muted);line-height:1.6;
+  }
+  .note b{color:#9aa4b5}
+
+  /* ── Monitoring view ──────────────────────────────────────────── */
+  .monitor{display:none}
+  .monitor.show{display:block}
+  .setup.hide{display:none}
+
+  .feed-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  }
+  .feed-top{
+    display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .feed-name{font-weight:500;font-size:14.5px}
+  .status-pill{
+    font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;
+    display:flex;align-items:center;gap:6px;letter-spacing:.03em;
+  }
+  .status-pill::before{content:"";width:6px;height:6px;border-radius:50%}
+  .status-pill.live{background:rgba(0,208,132,.12);color:var(--ok)}
+  .status-pill.live::before{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  .status-pill.alert{background:rgba(255,176,32,.12);color:var(--warn)}
+  .status-pill.alert::before{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+  .status-pill.down{background:rgba(255,59,59,.12);color:var(--danger)}
+  .status-pill.down::before{background:var(--danger)}
+
+  .feed-img-wrap{
+    aspect-ratio:4/3;background:#000;display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .feed-img-wrap img{width:100%;height:100%;object-fit:contain}
+  .feed-placeholder{color:var(--muted);font-family:var(--mono);font-size:12px;text-align:center;padding:20px}
+
+  .feed-bottom{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .feed-detail{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .stop-btn{
+    background:transparent;border:1px solid var(--border2);color:#9aa4b5;
+    padding:8px 14px;border-radius:7px;font-size:12.5px;cursor:pointer;font-family:var(--sans);
+  }
+  .stop-btn:hover{border-color:var(--danger);color:var(--danger)}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--panel2);border:1px solid var(--border2);border-radius:9px;
+    padding:12px 18px;font-size:13px;opacity:0;transition:all .25s;z-index:200;
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.error{border-color:rgba(255,59,59,.4);color:#ff8080}
+
+  @media(max-width:480px){
+    header{padding:14px 18px}
+    main{padding:32px 14px 60px}
+    .card{padding:20px}
+    h1{font-size:23px}
+  }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
-      <line x1="12" y1="3" x2="12" y2="1"/><line x1="12" y1="23" x2="12" y2="21"/>
-      <line x1="3" y1="12" x2="1" y2="12"/><line x1="23" y1="12" x2="21" y2="12"/>
-    </svg>
-    <div>SENTINEL<div class="tagline">24/7 Camera Surveillance</div></div>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4z" stroke="#00e5ff" stroke-width="1.5"/><circle cx="12" cy="11" r="2.6" stroke="#00e5ff" stroke-width="1.5"/></svg>
+    <b>Sentinel</b>
   </div>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em">LIVE MONITORING</span>
+</header>
 
-  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+<main>
+  <div class="wrap">
 
-  <h2>Sign in</h2>
-  <p class="sub">Enter your credentials to access your cameras</p>
+    <!-- SETUP -->
+    <section class="setup" id="setup">
+      <div class="eyebrow">New camera</div>
+      <h1>Connect a camera</h1>
+      <p class="lede">Give Sentinel the camera's stream address and a Telegram bot to message. Monitoring starts the moment it's confirmed reachable.</p>
 
-  <div class="error" id="err"></div>
+      <div class="error-box" id="errorBox"></div>
 
-  <div class="field">
-    <label>Username</label>
-    <input type="text" id="username" placeholder="your-username" autocomplete="username"/>
+      <form class="card" id="setupForm">
+        <div class="field">
+          <label for="name">Camera name</label>
+          <input type="text" id="name" placeholder="Front Gate" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="rtsp">RTSP URL</label>
+          <input type="text" id="rtsp" placeholder="rtsp://user:pass@203.0.113.5:554/Streaming/Channels/101" autocomplete="off" required>
+          <div class="hint">Must be reachable from the internet — a public IP or a port-forwarded address. Cameras on a private home/office network without port forwarding can't be reached.</div>
+        </div>
+        <div class="field">
+          <label for="token">Telegram bot token</label>
+          <input type="text" id="token" placeholder="123456789:AAH..." autocomplete="off" required>
+          <div class="hint">From <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram — create a bot and paste the token it gives you.</div>
+        </div>
+        <div class="field">
+          <label for="chatid">Telegram chat ID</label>
+          <input type="text" id="chatid" placeholder="7062934719" autocomplete="off" required>
+          <div class="hint">Message your bot once first (any text), then get this from <a href="https://t.me/getidsbot" target="_blank" rel="noopener">@getidsbot</a>.</div>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">Connect and start monitoring</button>
+      </form>
+
+      <div class="note">
+        <b>How this works:</b> on submit, Sentinel checks the bot token, confirms it can message that chat, then opens the RTSP stream with a short timeout. If any step fails, you'll see exactly which one and why — it won't tell you the camera connected unless it actually did.
+      </div>
+    </section>
+
+    <!-- MONITORING -->
+    <section class="monitor" id="monitor">
+      <div class="eyebrow">Active</div>
+      <h1 id="monName">Camera</h1>
+      <p class="lede">Watching for motion and faces. You'll get a Telegram message with a screenshot when something's detected.</p>
+
+      <div class="feed-card">
+        <div class="feed-top">
+          <span class="feed-name" id="feedName">Camera</span>
+          <span class="status-pill live" id="statusPill">● live</span>
+        </div>
+        <div class="feed-img-wrap" id="feedImgWrap">
+          <div class="feed-placeholder">Connecting to feed…</div>
+        </div>
+        <div class="feed-bottom">
+          <span class="feed-detail" id="feedDetail">Watching for motion and faces</span>
+          <button class="stop-btn" id="stopBtn">Stop monitoring</button>
+        </div>
+      </div>
+    </section>
+
   </div>
-  <div class="field">
-    <label>Password</label>
-    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
-  </div>
-  <button class="btn" id="loginBtn" onclick="login()">Sign in →</button>
+</main>
 
-  <div class="footer">Sentinel Surveillance Platform</div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-  // Point this at your Render backend URL
- const API = localStorage.getItem("sentinel_api") || "https://sentinel-cameras-backend.onrender.com";
+const API = localStorage.getItem("sentinel_api") || "https://sentinel-cameras-backend.onrender.com";
 
-  document.getElementById("password").addEventListener("keydown", e => {
-    if (e.key === "Enter") login();
-  });
+const setupEl = document.getElementById("setup");
+const monitorEl = document.getElementById("monitor");
+const form = document.getElementById("setupForm");
+const submitBtn = document.getElementById("submitBtn");
+const errorBox = document.getElementById("errorBox");
+const toastEl = document.getElementById("toast");
 
-  async function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const btn = document.getElementById("loginBtn");
-    const err = document.getElementById("err");
-    err.style.display = "none";
-    if (!username || !password) { showErr("Enter username and password"); return; }
-    btn.disabled = true; btn.textContent = "Signing in…";
+let camId = null;
+let pollTimer = null;
+
+function showToast(msg, isError=false){
+  toastEl.textContent = msg;
+  toastEl.className = "toast show" + (isError ? " error" : "");
+  setTimeout(() => toastEl.className = "toast", 3200);
+}
+
+function showError(msg){
+  errorBox.textContent = msg;
+  errorBox.classList.add("show");
+}
+function clearError(){
+  errorBox.classList.remove("show");
+  errorBox.textContent = "";
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearError();
+
+  const name = document.getElementById("name").value.trim() || "Camera";
+  const rtsp_url = document.getElementById("rtsp").value.trim();
+  const telegram_token = document.getElementById("token").value.trim();
+  const telegram_chat_id = document.getElementById("chatid").value.trim();
+
+  if (!rtsp_url || !telegram_token || !telegram_chat_id) {
+    showError("All fields except camera name are required.");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Checking camera and Telegram…";
+
+  let res, data;
+  try {
+    res = await fetch(`${API}/api/monitor`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, rtsp_url, telegram_token, telegram_chat_id })
+    });
+    data = await res.json();
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Connect and start monitoring";
+    showError("Couldn't reach the monitoring server. It may be waking up from sleep — wait about 30 seconds and try again.");
+    return;
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Connect and start monitoring";
+
+  if (!res.ok || data.error) {
+    showError(data.error || "Something went wrong starting monitoring.");
+    return;
+  }
+
+  camId = data.id;
+  document.getElementById("monName").textContent = data.name;
+  document.getElementById("feedName").textContent = data.name;
+  setupEl.classList.add("hide");
+  monitorEl.classList.add("show");
+
+  document.getElementById("feedImgWrap").innerHTML =
+    `<img src="${API}/video/${camId}" alt="Live feed" onerror="this.parentElement.innerHTML='<div class=feed-placeholder>Feed unavailable — still monitoring in the background</div>'">`;
+
+  startPolling();
+});
+
+function startPolling(){
+  pollTimer = setInterval(async () => {
+    if (!camId) return;
     try {
-      const res = await fetch(`${API}/api/login`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (data.error) { showErr(data.error); return; }
-      localStorage.setItem("sentinel_token", data.token);
-      localStorage.setItem("sentinel_role",  data.role);
-      localStorage.setItem("sentinel_name",  data.name);
-      localStorage.setItem("sentinel_api",   API);
-      window.location.href = data.role === "admin" ? "admin.html" : "dashboard.html";
-    } catch(e) {
-      showErr("Cannot reach server. Check your connection.");
-    } finally {
-      btn.disabled = false; btn.textContent = "Sign in →";
-    }
-  }
+      const res = await fetch(`${API}/api/monitor`);
+      const list = await res.json();
+      const cam = list.find(c => c.id === camId);
+      if (!cam) return;
 
-  function showErr(msg) {
-    const err = document.getElementById("err");
-    err.textContent = "⚠ " + msg;
-    err.style.display = "block";
-  }
+      const pill = document.getElementById("statusPill");
+      const detail = document.getElementById("feedDetail");
 
-  // Auto-redirect if already logged in
-  const token = localStorage.getItem("sentinel_token");
-  const role  = localStorage.getItem("sentinel_role");
-  if (token) window.location.href = role === "admin" ? "admin.html" : "dashboard.html";
+      if (cam.status.error) {
+        pill.className = "status-pill down";
+        pill.textContent = "● reconnecting";
+        detail.textContent = cam.status.error;
+      } else if (cam.status.detections && cam.status.detections.length) {
+        pill.className = "status-pill alert";
+        pill.textContent = "● alert sent";
+        detail.textContent = cam.status.detections.join(" · ");
+      } else {
+        pill.className = "status-pill live";
+        pill.textContent = "● live";
+        detail.textContent = "Watching for motion and faces";
+      }
+    } catch {}
+  }, 3000);
+}
+
+document.getElementById("stopBtn").addEventListener("click", async () => {
+  if (!camId) return;
+  if (!confirm("Stop monitoring this camera?")) return;
+  try {
+    await fetch(`${API}/api/monitor/${camId}`, { method: "DELETE" });
+  } catch {}
+  clearInterval(pollTimer);
+  camId = null;
+  monitorEl.classList.remove("show");
+  setupEl.classList.remove("hide");
+  form.reset();
+  showToast("Monitoring stopped.");
+});
 </script>
+
 </body>
 </html>
