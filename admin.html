@@ -148,7 +148,7 @@
 <div id="toast"></div>
 
 <script>
-const API   = localStorage.getItem("sentinel_api") || "https://YOUR-BACKEND.onrender.com";
+const API = localStorage.getItem("sentinel_api") || "https://sentinel-cameras-backend.onrender.com";
 const TOKEN = localStorage.getItem("sentinel_token");
 const ROLE  = localStorage.getItem("sentinel_role");
 if (!TOKEN || ROLE !== "admin") location.href = "index.html";
