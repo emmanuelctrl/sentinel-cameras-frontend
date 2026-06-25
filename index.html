@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sentinel — Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#080a0d; --panel:#0e1117; --border:#1a1f28; --border2:#242b36;
+    --accent:#00e5ff; --danger:#ff3b3b; --ok:#00d084;
+    --text:#e2e8f0; --muted:#4a5568;
+    --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background-image:radial-gradient(ellipse at 20% 50%, rgba(0,229,255,.04) 0%, transparent 60%),
+                     radial-gradient(ellipse at 80% 20%, rgba(0,208,132,.03) 0%, transparent 50%);
+  }
+  .card{
+    width:380px;padding:40px 36px;
+    background:var(--panel);border:1px solid var(--border2);
+    border-radius:18px;box-shadow:0 32px 80px rgba(0,0,0,.5);
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;margin-bottom:32px;
+    font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent);
+    letter-spacing:.06em;
+  }
+  .logo svg{width:28px;height:28px}
+  .tagline{font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.04em;}
+  h2{font-size:20px;font-weight:600;margin-bottom:6px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+  .field{margin-bottom:18px}
+  label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;
+    font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  input{
+    width:100%;padding:11px 14px;
+    background:var(--bg);border:1px solid var(--border2);
+    border-radius:8px;color:var(--text);font-size:14px;
+    font-family:var(--sans);outline:none;transition:border .15s;
+  }
+  input:focus{border-color:var(--accent)}
+  .btn{
+    width:100%;padding:12px;border-radius:9px;border:none;
+    background:var(--accent);color:#000;font-size:14px;font-weight:600;
+    cursor:pointer;transition:filter .15s;margin-top:6px;font-family:var(--sans);
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .error{
+    background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.3);
+    border-radius:7px;padding:10px 14px;font-size:13px;color:var(--danger);
+    margin-bottom:16px;display:none;
+  }
+  .footer{margin-top:28px;text-align:center;font-size:12px;color:var(--muted)}
+  .dots{display:flex;gap:6px;margin-bottom:28px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--border2)}
+  .dot:nth-child(1){background:var(--ok)}
+  .dot:nth-child(2){background:var(--accent)}
+  .dot:nth-child(3){background:var(--muted)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
+      <line x1="12" y1="3" x2="12" y2="1"/><line x1="12" y1="23" x2="12" y2="21"/>
+      <line x1="3" y1="12" x2="1" y2="12"/><line x1="23" y1="12" x2="21" y2="12"/>
+    </svg>
+    <div>SENTINEL<div class="tagline">24/7 Camera Surveillance</div></div>
+  </div>
+
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+
+  <h2>Sign in</h2>
+  <p class="sub">Enter your credentials to access your cameras</p>
+
+  <div class="error" id="err"></div>
+
+  <div class="field">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="your-username" autocomplete="username"/>
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+  </div>
+  <button class="btn" id="loginBtn" onclick="login()">Sign in →</button>
+
+  <div class="footer">Sentinel Surveillance Platform</div>
+</div>
+
+<script>
+  // Point this at your Render backend URL
+  const API = localStorage.getItem("sentinel_api") || "https://YOUR-BACKEND.onrender.com";
+
+  document.getElementById("password").addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+  });
+
+  async function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const btn = document.getElementById("loginBtn");
+    const err = document.getElementById("err");
+    err.style.display = "none";
+    if (!username || !password) { showErr("Enter username and password"); return; }
+    btn.disabled = true; btn.textContent = "Signing in…";
+    try {
+      const res = await fetch(`${API}/api/login`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (data.error) { showErr(data.error); return; }
+      localStorage.setItem("sentinel_token", data.token);
+      localStorage.setItem("sentinel_role",  data.role);
+      localStorage.setItem("sentinel_name",  data.name);
+      localStorage.setItem("sentinel_api",   API);
+      window.location.href = data.role === "admin" ? "admin.html" : "dashboard.html";
+    } catch(e) {
+      showErr("Cannot reach server. Check your connection.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Sign in →";
+    }
+  }
+
+  function showErr(msg) {
+    const err = document.getElementById("err");
+    err.textContent = "⚠ " + msg;
+    err.style.display = "block";
+  }
+
+  // Auto-redirect if already logged in
+  const token = localStorage.getItem("sentinel_token");
+  const role  = localStorage.getItem("sentinel_role");
+  if (token) window.location.href = role === "admin" ? "admin.html" : "dashboard.html";
+</script>
+</body>
+</html>
